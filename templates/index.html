@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QWEN AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        body { background-color: #131314; color: #e3e3e3; font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
+        
+        .gemini-gradient { 
+            background: linear-gradient(74deg, #4285f4 0, #9b72cb 20%, #d96570 40%, #d96570 60%, #9b72cb 80%, #4285f4 100%); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-size: 200% auto; 
+            animation: gradient-move 4s linear infinite; 
+        }
+        @keyframes gradient-move { to { background-position: 200% center; } }
+
+        /* Sửa lại đoạn này trong thẻ <style> */
+        .chat-container {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        /* Quan trọng: padding-bottom phải lớn hơn chiều cao của input-area-fixed */
+        padding-bottom: 180px; 
+        scroll-behavior: smooth;}
+
+        .input-area-fixed {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        /* Thêm gradient để tạo hiệu ứng mờ dần phía sau thanh input, giúp tin nhắn không bị cắt đột ngột */
+        background: linear-gradient(to top, #131314 70%, transparent 100%);
+        padding: 20px 0 30px 0;
+        z-index: 100;
+    }
+        .chat-content { width: 100%; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; padding-bottom: 100px; }
+        
+        /* Tin nhắn người dùng */
+        .msg-user-container { align-self: flex-end; max-width: 80%; }
+        .msg-user { background: #2b2a2b; padding: 12px 18px; border-radius: 1.2rem; border: 1px solid #444; box-shadow: 0 4px 15px rgba(0,0,0,0.2); word-wrap: break-word; }
+        
+        /* Tin nhắn AI */
+        .msg-ai { align-self: flex-start; display: flex; gap: 1rem; width: 100%; }
+        .ai-avatar { width: 32px; height: 32px; background: linear-gradient(45deg, #4285f4, #9b72cb); border-radius: 50%; flex-shrink: 0; margin-top: 8px; }
+        
+        .input-area-fixed { position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, #131314 30%); padding-bottom: 20px; }
+        .input-area-container { max-width: 800px; margin: 0 auto; width: 95%; background: #1e1f20; border-radius: 28px; border: 1px solid #333; padding: 8px 16px; transition: 0.3s; }
+        .input-area-container:focus-within { border-color: #555; background: #252627; }
+
+        .timestamp { font-size: 10px; color: #71717a; margin-bottom: 4px; display: block; }
+        
+        /* Loading & Cursor */
+        .typing-cursor::after { content: " ▎"; animation: cursor-blink 1s infinite; color: #8ab4f8; }
+        @keyframes cursor-blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+        /* Khối format đặc biệt */
+        .res-body { line-height: 1.7; color: #e3e3e3; font-size: 15px; }
+        .translation-block { border-left: 3px solid #4285f4; background: rgba(66, 133, 244, 0.1); padding: 12px; border-radius: 0 12px 12px 0; margin: 10px 0; }
+        .summary-block { border-left: 3px solid #10b981; background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 0 12px 12px 0; margin: 10px 0; }
+        
+        /* Scrollbar ẩn */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <header class="p-4 flex items-center justify-between border-b border-gray-800 bg-[#131314] z-10">
+        <span class="text-xl font-bold italic gemini-gradient">QWEN AI Assistant</span>
+        <button onclick="clearChat()" class="text-xs text-gray-500 hover:text-red-400 transition">
+            <i class="fa-solid fa-trash-can mr-1"></i> Xóa lịch sử
+        </button>
+    </header>
+
+    <div class="chat-container" id="chat-container">
+        <div class="chat-content" id="chat-content">
+            <div class="mt-32 text-center" id="welcome-msg">
+                <h1 class="text-5xl font-medium gemini-gradient">Tôi có thể giúp gì cho bạn?</h1>
+                <p class="text-gray-500 mt-6 text-sm tracking-wide">Vision & Language Powered • Dịch thuật • Tóm tắt</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-area-fixed">
+        <div class="input-area-container">
+            <div id="preview-container" class="hidden mb-3 ml-2 relative inline-block">
+                <img id="image-preview" class="w-20 h-20 object-cover rounded-xl border border-gray-600 shadow-lg">
+                <div class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs cursor-pointer shadow-md hover:bg-red-600" onclick="clearImage()">×</div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label for="img-upload" class="p-2 text-gray-400 cursor-pointer hover:text-white transition" title="Thêm ảnh">
+                    <i class="fa-solid fa-circle-plus text-xl"></i>
+                </label>
+                <input type="file" id="img-upload" class="hidden" accept="image/*" onchange="previewImage(this)">
+                
+                <textarea id="userInput"
+                        rows="1"
+                        class="flex-1 bg-transparent border-none outline-none text-white px-2 text-base resize-none overflow-hidden"
+                        placeholder="Nhập nội dung hoặc gửi ảnh..."
+                ></textarea>
+                
+                <button onclick="sendMessage()" id="send-btn" class="p-2 text-blue-500 hover:scale-110 disabled:text-gray-600 disabled:hover:scale-100 transition">
+                    <i class="fa-solid fa-paper-plane text-xl"></i>
+                </button>
+            </div>
+            <!-- <div class="flex gap-2 mt-2 ml-4">
+                <button onclick="quickAction('Dịch sang tiếng Việt')" class="text-[10px] border border-gray-600 px-2 py-1 rounded-full hover:bg-gray-700">🇺🇸 ➔ 🇻🇳 Dịch Việt</button>
+                <button onclick="quickAction('Dịch sang tiếng Anh')" class="text-[10px] border border-gray-600 px-2 py-1 rounded-full hover:bg-gray-700">🇻🇳 ➔ 🇺🇸 Dịch Anh</button>
+                <button onclick="quickAction('Tóm tắt ý chính')" class="text-[10px] border border-gray-600 px-2 py-1 rounded-full hover:bg-gray-700">🧠 Tóm tắt</button>
+            </div> -->
+        </div>
+        <p class="text-[9px] text-gray-600 text-center mt-3 uppercase tracking-[0.2em] font-bold">Qwen LLM • AI Technology • Locally Powered</p>
+    </div>
+
+
+<script>
+    let selectedFile = null;
+    let isProcessing = false;
+
+    function getCurrentTime() {
+        return new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+    }
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            selectedFile = input.files[0];
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('image-preview').src = e.target.result;
+                document.getElementById('preview-container').classList.remove('hidden');
+                document.getElementById('userInput').focus();
+            }
+            reader.readAsDataURL(selectedFile);
+        }
+    }
+
+    function clearImage() {
+        selectedFile = null;
+        document.getElementById('img-upload').value = '';
+        document.getElementById('preview-container').classList.add('hidden');
+    }
+
+    // Format text AI trả về (Dịch/Tóm tắt)
+    function formatAIResponse(text) {
+        let formatted = text
+            .replace(/=== TRANSLATION ===/g, '<div class="translation-block"><h4 class="text-blue-400 font-bold mb-1 text-xs">BẢN DỊCH</h4>')
+            .replace(/=== SUMMARY ===/g, '</div><div class="summary-block"><h4 class="text-emerald-400 font-bold mb-1 text-xs">TÓM TẮT</h4>')
+            .replace(/\n/g, '<br>');
+        
+        if (formatted.includes('class="summary-block"') && !formatted.endsWith('</div>')) {
+            formatted += '</div>';
+        } else if (formatted.includes('class="translation-block"') && !formatted.includes('class="summary-block"') && !formatted.endsWith('</div>')) {
+             formatted += '</div>';
+        }
+        return formatted;
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if ((!text && !selectedFile) || isProcessing) return;
+
+        isProcessing = true;
+        document.getElementById('send-btn').disabled = true;
+        document.getElementById('welcome-msg').style.display = 'none';
+        
+        const chatContent = document.getElementById('chat-content');
+        const container = document.getElementById('chat-container');
+        const time = getCurrentTime();
+
+        // 1. Render User Message
+        const userContainer = document.createElement('div');
+        userContainer.className = 'msg-user-container';
+        let imgHtml = selectedFile ? `<img src="${document.getElementById('image-preview').src}" class="max-w-[250px] mt-2 rounded-xl border border-gray-700 shadow-md">` : '';
+        userContainer.innerHTML = `<span class="timestamp text-right">${time}</span><div class="msg-user">${text || "[Hình ảnh]"}${imgHtml}</div>`;
+        chatContent.appendChild(userContainer);
+
+        // 2. Render AI Placeholder
+        const aiDiv = document.createElement('div');
+        aiDiv.className = 'msg-ai';
+        aiDiv.innerHTML = `<div class="ai-avatar shadow-lg"></div><div class="flex-1"><span class="timestamp">${time}</span><div class="res-body typing-cursor"></div></div>`;
+        chatContent.appendChild(aiDiv);
+        const resBody = aiDiv.querySelector('.res-body');
+
+        // Prepare Data
+        const formData = new FormData();
+        formData.append('text', text);
+        if (selectedFile) formData.append('image', selectedFile);
+
+        // Reset inputs
+        const currentImageData = selectedFile ? document.getElementById('image-preview').src : null;
+        input.value = ''; 
+        clearImage();
+        container.scrollTop = container.scrollHeight;
+
+        try {
+            const response = await fetch('/chat-process', { method: 'POST', body: formData });
+            
+            if (!response.ok) throw new Error("Server không phản hồi");
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullAIResponse = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                fullAIResponse += chunk;
+                
+                // Cập nhật giao diện
+                resBody.innerHTML = formatAIResponse(fullAIResponse);
+                container.scrollTop = container.scrollHeight;
+            }
+
+        } catch (err) {
+            resBody.innerHTML = `<span class="text-red-400">❌ Lỗi hệ thống: ${err.message}</span>`;
+        } finally {
+            resBody.classList.remove('typing-cursor');
+            isProcessing = false;
+            document.getElementById('send-btn').disabled = false;
+        }
+    }
+
+    async function clearChat() {
+        if(confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện?")) {
+            await fetch('/clear', {method: 'POST'});
+            location.reload();
+        }
+    }
+    const textarea = document.getElementById('userInput');
+
+    textarea.addEventListener('input', function () {    
+    this.style.height = 'auto';
+    this.style.height = this.scrollHeight + 'px';
+});
+    document.getElementById('userInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !isProcessing) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+    document.addEventListener('paste', (event) => {
+    const items = event.clipboardData.items;
+
+    for (let item of items) {
+        if (item.type.indexOf('image') !== -1) {
+            const file = item.getAsFile();
+            selectedFile = file;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('image-preview').src = e.target.result;
+                document.getElementById('preview-container').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+});
+    function quickAction(cmd) {
+    document.getElementById('userInput').value = cmd;
+    sendMessage();
+}
+</script>
+</body>
+</html>
