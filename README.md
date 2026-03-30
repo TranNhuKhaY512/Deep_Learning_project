@@ -6,12 +6,12 @@ Do giới hạn về dung lượng lưu trữ của GitHub, các tệp trọng s
 
 ### 1. Mô hình Qwen (Đã Merged)
 Mô hình ngôn ngữ lớn Qwen đã được tinh chỉnh và merge trọng số để tối ưu hóa khả năng tương tác.
-* **Link tải:** [https://drive.google.com/drive/folders/1cal71LcVOnK-REktlsPCmWFpvGhz6Piy?usp=sharing](#)
+* **Link tải:** [Tải Qwen model](https://drive.google.com/drive/folders/1cal71LcVOnK-REktlsPCmWFpvGhz6Piy?usp=sharing)(#)
 * **Vị trí lưu:** Giải nén và đặt toàn bộ tệp vào thư mục `models/qwen_merged/`
 
 ### 2. Mô hình BLIP (Image Understanding)
 Mô hình xử lý thị giác máy tính dùng để đọc hiểu và phân tích hình ảnh đầu vào.
-* **Link tải:** [https://drive.google.com/drive/folders/10Uz8upBCkQQilm2ueEnglJm_xc13KFYs?usp=sharing](#)
+* **Link tải:** [Tải BLIP Model](https://drive.google.com/drive/folders/10Uz8upBCkQQilm2ueEnglJm_xc13KFYs?usp=sharing)(#)
 * **Vị trí lưu:** Đặt tệp `.pth` hoặc `.bin` vào thư mục `models/blip/`
 
 ### 3. Cài đặt công cụ Tesseract OCR (Trích xuất văn bản)
@@ -94,7 +94,7 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 ```
 3. Tải Mô hình (Weights)
 - Tạo thư mục models/ và tải các trọng số (weights) đã được huấn luyện vào đúng cấu trúc:
-- Mô hình Qwen (LoRA Merged): [https://drive.google.com/drive/folders/1cal71LcVOnK-REktlsPCmWFpvGhz6Piy?usp=sharing] -> Giải nén vào models/qwen-merged/.
+- Mô hình Qwen (LoRA Merged): [Tải Qwen Model](https://drive.google.com/drive/folders/1cal71LcVOnK-REktlsPCmWFpvGhz6Piy?usp=sharing) -> Giải nén vào models/qwen-merged/.
 - Mô hình BLIP: Sẽ tự động tải qua Hugging Face trong lần chạy đầu tiên, hoặc bạn có thể tải tay và đặt vào models/blip/.
 
 4. Khởi động hệ thống
