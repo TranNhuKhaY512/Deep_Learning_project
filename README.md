@@ -5,10 +5,10 @@
 - Đặc biệt, dự án kết hợp khả năng xử lý đa phương thức (Multimodal). Người dùng có thể cung cấp dữ liệu đầu vào là hình ảnh; hệ thống sẽ tự động trích xuất văn bản (bằng công cụ OCR) hoặc sinh ra câu mô tả hình ảnh đó (bằng mô hình BLIP) để tiếp tục thực hiện luồng dịch thuật và tóm tắt.
 
 ### Tính năng nổi bật
-- Dịch thuật Song ngữ: Dịch chính xác văn bản từ tiếng Anh sang tiếng Việt và ngược lại.
-- Tóm tắt Thông minh: Tự động tóm tắt ngắn gọn nội dung văn bản sau khi dịch (khoảng 3 câu).
-- Xử lý Đa phương thức (Multimodal):Tích hợp Tesseract OCR để nhận diện và bóc tách chữ viết từ hình ảnh tải lên. Tích hợp mô hình BLIP để tự động mô tả ngữ cảnh hình ảnh trong trường hợp không có hoặc có quá ít văn bản.
-- Giao diện Chatbot Trực quan: Ứng dụng Web Chatbot thân thiện được phát triển bằng Flask, hỗ trợ giao tiếp và tương tác mượt mà.
+- ***Dịch thuật Song ngữ***: Dịch chính xác văn bản từ tiếng Anh sang tiếng Việt và ngược lại.
+- ***Tóm tắt Thông minh***: Tự động tóm tắt ngắn gọn nội dung văn bản sau khi dịch (khoảng 3 câu).
+- ***Xử lý Đa phương thức (Multimodal)***:Tích hợp Tesseract OCR để nhận diện và bóc tách chữ viết từ hình ảnh tải lên. Tích hợp mô hình BLIP để tự động mô tả ngữ cảnh hình ảnh trong trường hợp không có hoặc có quá ít văn bản.
+- ***Giao diện Chatbot Trực quan***: Ứng dụng Web Chatbot thân thiện được phát triển bằng Flask, hỗ trợ giao tiếp và tương tác mượt mà.
 
 ### Công nghệ & Mô hình sử dụng
 - Mô hình cốt lõi: Qwen/Qwen2.5-3B-Instruct.
