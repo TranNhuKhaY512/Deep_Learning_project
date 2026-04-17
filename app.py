@@ -332,7 +332,6 @@ Yêu cầu ngôn ngữ: {lang_instruction}
     inputs = tokenizer([prompt], return_tensors="pt").to(device)
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
-# ✅ DÁN Ở ĐÂY
     if task == "summary":
             generation_kwargs = dict(
         **inputs,
